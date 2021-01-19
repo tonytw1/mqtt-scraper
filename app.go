@@ -19,7 +19,7 @@ func main() {
 	mqttURL := "tcp://10.0.45.15:32183"
 	topic := "abbottroad"
 
-	mqttClient := setupMqttClient(mqttURL, "test-client2")
+	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper")
 	defer mqttClient.Disconnect(250)
 
 	messageHandler := func(client mqtt.Client, message mqtt.Message) {
