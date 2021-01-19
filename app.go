@@ -74,8 +74,10 @@ func setupMqttClient(mqttURL string, clientId string, topic string, handler mqtt
 	mqtt.CRITICAL = log.New(os.Stdout, "[CRIT] ", 0)
 	mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
 
-	var logConnection mqtt.OnConnectHandler = func(client mqtt.Client) {
+	var subscribeToTopic mqtt.OnConnectHandler = func(client mqtt.Client) {
 		log.Print("Connected")
+		log.Print("Subscribing")
+		client.Subscribe(topic, 0, handler)
 	}
 	var logConnectionLost mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
 		log.Print("Connection lost")
@@ -83,17 +85,12 @@ func setupMqttClient(mqttURL string, clientId string, topic string, handler mqtt
 	var logReconnecting mqtt.ReconnectHandler = func(client mqtt.Client, opts *mqtt.ClientOptions) {
 		log.Print("Reconnecting")
 	}
-	var subscribeToTopic mqtt.OnConnectHandler = func(client mqtt.Client) {
-		log.Print("Subscribing")
-		client.Subscribe(topic, 0, handler)
-	}
 
 	opts := mqtt.NewClientOptions().AddBroker(mqttURL)
-	opts.SetOnConnectHandler(logConnection)
-	opts.SetConnectionLostHandler(logConnectionLost)
-	opts.SetReconnectingHandler(logReconnecting)
 	opts.SetClientID(clientId)
 	opts.SetOnConnectHandler(subscribeToTopic)
+	opts.SetConnectionLostHandler(logConnectionLost)
+	opts.SetReconnectingHandler(logReconnecting)
 
 	println("Connecting to: ", mqttURL)
 	client := mqtt.NewClient(opts)
