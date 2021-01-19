@@ -16,7 +16,7 @@ var gauges = make(map[string]prometheus.Gauge)
 var minimalRegistry = prometheus.NewRegistry()
 
 func main() {
-	mqttURL := "tcp://10.0.45.15:32183"
+	mqttURL := "tcp://mosquitto:1883"
 	topic := "abbottroad"
 
 	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper")
