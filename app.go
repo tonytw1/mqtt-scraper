@@ -19,9 +19,6 @@ func main() {
 	mqttURL := "tcp://mosquitto:1883"
 	topic := "abbottroad"
 
-	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper")
-	defer mqttClient.Disconnect(250)
-
 	messageHandler := func(client mqtt.Client, message mqtt.Message) {
 		payload := string(message.Payload())
 		split := strings.Split(payload, ":")
@@ -42,8 +39,8 @@ func main() {
 		gauge.Set(value)
 	}
 
-	mqttClient.Subscribe(topic, 0, messageHandler)
-	println("Subscribed")
+	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper", topic, messageHandler)
+	defer mqttClient.Disconnect(250)
 
 	handler := promhttp.HandlerFor(minimalRegistry, promhttp.HandlerOpts{})
 	http.Handle("/", handler)
@@ -72,7 +69,7 @@ func getOrRegisterGauge(name string) prometheus.Gauge {
 	return gauge
 }
 
-func setupMqttClient(mqttURL string, clientId string) mqtt.Client {
+func setupMqttClient(mqttURL string, clientId string, topic string, handler mqtt.MessageHandler) mqtt.Client {
 	mqtt.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
 	mqtt.CRITICAL = log.New(os.Stdout, "[CRIT] ", 0)
 	mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
@@ -86,12 +83,17 @@ func setupMqttClient(mqttURL string, clientId string) mqtt.Client {
 	var logReconnecting mqtt.ReconnectHandler = func(client mqtt.Client, opts *mqtt.ClientOptions) {
 		log.Print("Reconnecting")
 	}
+	var subscribeToTopic mqtt.OnConnectHandler = func(client mqtt.Client) {
+		log.Print("Subscribing")
+		client.Subscribe(topic, 0, handler)
+	}
 
 	opts := mqtt.NewClientOptions().AddBroker(mqttURL)
 	opts.SetOnConnectHandler(logConnection)
 	opts.SetConnectionLostHandler(logConnectionLost)
 	opts.SetReconnectingHandler(logReconnecting)
 	opts.SetClientID(clientId)
+	opts.SetOnConnectHandler(subscribeToTopic)
 
 	println("Connecting to: ", mqttURL)
 	client := mqtt.NewClient(opts)
