@@ -16,7 +16,7 @@ var gauges = make(map[string]prometheus.Gauge)
 var minimalRegistry = prometheus.NewRegistry()
 
 func main() {
-	mqttURL := "tcp://mosquitto:1883"
+	mqttURL := "tcp://10.0.45.15:32183"
 	topic := "abbottroad"
 
 	messageHandler := func(client mqtt.Client, message mqtt.Message) {
@@ -28,10 +28,16 @@ func main() {
 
 		name := normaliseMetricName(split[0])
 
-		value, err := strconv.ParseFloat(split[1], 32)
+		// TODO can this be done in 1 call?
+		valueToParse := split[1]
+		value, err := strconv.ParseFloat(valueToParse, 32)
 		if err != nil {
-			println("Rejected unparsable value: " + split[1])
-			return
+			i, err := strconv.ParseInt(valueToParse, 10, 32)
+			if err != nil {
+				println("Rejected unparsable value: " + valueToParse)
+				return
+			}
+			value = float64(i)
 		}
 
 		gauge := getOrRegisterGauge(name)
@@ -40,7 +46,7 @@ func main() {
 		gauge.Set(value)
 	}
 
-	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper", topic, messageHandler)
+	mqttClient := setupMqttClient(mqttURL, "mqtt-scra1per", topic, messageHandler)
 	defer mqttClient.Disconnect(250)
 
 	handler := promhttp.HandlerFor(minimalRegistry, promhttp.HandlerOpts{})
