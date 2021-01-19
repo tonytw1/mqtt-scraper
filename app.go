@@ -30,6 +30,7 @@ func main() {
 
 		value, err := strconv.ParseFloat(split[1], 32)
 		if err != nil {
+			println("Rejected unparsable value: " + split[1])
 			return
 		}
 
