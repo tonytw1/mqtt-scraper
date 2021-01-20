@@ -31,7 +31,7 @@ func main() {
 		valueToParse := split[1]
 		value, err := parseMaybeNumber(valueToParse)
 		if err != nil {
-			println("Rejected unparsable value: " + valueToParse)
+			println("Rejected unparsable value: '" + valueToParse + "'")
 		}
 
 		gauge := getOrRegisterGauge(name)
