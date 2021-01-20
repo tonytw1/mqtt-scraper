@@ -28,7 +28,7 @@ func main() {
 
 		name := normaliseMetricName(split[0])
 
-		valueToParse := split[1]
+		valueToParse := strings.TrimSpace(split[1])
 		value, err := parseMaybeNumber(valueToParse)
 		if err != nil {
 			println("Rejected unparsable value: '" + valueToParse + "'")
@@ -36,11 +36,11 @@ func main() {
 
 		gauge := getOrRegisterGauge(name)
 
-		println("Setting: " + name)
+		println("Setting: " + name + " to " + strconv.FormatFloat(value, 'g', 10, 64))
 		gauge.Set(value)
 	}
 
-	mqttClient := setupMqttClient(mqttURL, "mqtt-scra1per", topic, messageHandler)
+	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper", topic, messageHandler)
 	defer mqttClient.Disconnect(250)
 
 	handler := promhttp.HandlerFor(minimalRegistry, promhttp.HandlerOpts{})
