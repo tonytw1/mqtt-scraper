@@ -28,16 +28,10 @@ func main() {
 
 		name := normaliseMetricName(split[0])
 
-		// TODO can this be done in 1 call?
 		valueToParse := split[1]
-		value, err := strconv.ParseFloat(valueToParse, 32)
+		value, err := parseMaybeNumber(valueToParse)
 		if err != nil {
-			i, err := strconv.ParseInt(valueToParse, 10, 32)
-			if err != nil {
-				println("Rejected unparsable value: " + valueToParse)
-				return
-			}
-			value = float64(i)
+			println("Rejected unparsable value: " + valueToParse)
 		}
 
 		gauge := getOrRegisterGauge(name)
@@ -60,6 +54,19 @@ func normaliseMetricName(input string) string {
 	name = strings.ReplaceAll(name, "-", "")
 	name = strings.ReplaceAll(name, ".", "")
 	return name
+}
+
+func parseMaybeNumber(valueToParse string) (float64, error) {
+	// TODO can this be done in 1 call?
+	value, err := strconv.ParseFloat(valueToParse, 32)
+	if err != nil {
+		i, err := strconv.ParseInt(valueToParse, 10, 32)
+		if err != nil {
+			return 0, err
+		}
+		value = float64(i)
+	}
+	return value, nil
 }
 
 func getOrRegisterGauge(name string) prometheus.Gauge {
