@@ -10,12 +10,14 @@ func TestCanParseIntegerNumbers(t *testing.T) {
 	value, err := parseMaybeNumber("123")
 	require.Nil(t, err)
 
-	assert.Equal(t, "123", value.String())
+	f, _ := value.Float64()
+	assert.Equal(t, 123.0, f)
 }
 
 func TestCanParseFloatNumbers(t *testing.T) {
 	value, err := parseMaybeNumber("123.46")
 	require.Nil(t, err)
 
-	assert.Equal(t, "123.46", value.String())
+	f, _ := value.Float64()
+	assert.Equal(t, 123.46, f)
 }
