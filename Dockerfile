@@ -5,6 +5,7 @@ COPY . .
 
 RUN go get -d -v ./...
 RUN go install -v ./...
+run go test -v
 run go build -v
 
 CMD ["app"]
