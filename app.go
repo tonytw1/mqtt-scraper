@@ -5,10 +5,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/shopspring/decimal"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -36,8 +36,9 @@ func main() {
 
 		gauge := getOrRegisterGauge(name)
 
-		println("Setting: " + name + " to " + strconv.FormatFloat(value, 'g', 10, 64))
-		gauge.Set(value)
+		println("Setting: " + name + " to " + value.String())
+		f, _ := value.Float64()
+		gauge.Set(f)
 	}
 
 	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper", topic, messageHandler)
@@ -56,17 +57,12 @@ func normaliseMetricName(input string) string {
 	return name
 }
 
-func parseMaybeNumber(valueToParse string) (float64, error) {
-	// TODO can this be done in 1 call?
-	value, err := strconv.ParseFloat(valueToParse, 32)
+func parseMaybeNumber(valueToParse string) (*decimal.Decimal, error) {
+	value, err := decimal.NewFromString(valueToParse)
 	if err != nil {
-		i, err := strconv.ParseInt(valueToParse, 10, 32)
-		if err != nil {
-			return 0, err
-		}
-		value = float64(i)
+		return nil, err
 	}
-	return value, nil
+	return &value, nil
 }
 
 func getOrRegisterGauge(name string) prometheus.Gauge {
