@@ -20,15 +20,16 @@ func main() {
 	topic := "abbottroad"
 
 	messageHandler := func(client mqtt.Client, message mqtt.Message) {
-		payload := string(message.Payload())
+		payload := strings.TrimSpace(string(message.Payload()))
 		split := strings.Split(payload, ":")
 		if len(split) != 2 {
+			println("Rejected malformed message: '" + payload + "'")
 			return
 		}
 
 		name := normaliseMetricName(split[0])
 
-		valueToParse := strings.TrimSpace(split[1])
+		valueToParse := split[1]
 		value, err := parseMaybeNumber(valueToParse)
 		if err != nil {
 			println("Rejected unparsable value: '" + valueToParse + "'")
