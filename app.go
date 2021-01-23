@@ -36,7 +36,6 @@ func main() {
 
 		gauge := getOrRegisterGauge(name)
 
-		println("Setting: " + name + " to " + value.String())
 		f, _ := value.Float64()
 		gauge.Set(f)
 	}
