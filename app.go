@@ -6,6 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shopspring/decimal"
+	"github.com/tkanos/gonfig"
 	"log"
 	"net/http"
 	"os"
@@ -15,9 +16,20 @@ import (
 var gauges = make(map[string]prometheus.Gauge)
 var minimalRegistry = prometheus.NewRegistry()
 
+type Configuration struct {
+	MqttUrl   string
+	MqttTopic string
+}
+
 func main() {
-	mqttURL := "tcp://10.0.45.15:32183"
-	topic := "abbottroad"
+	configuration := Configuration{}
+	err := gonfig.GetConf("config.json", &configuration)
+	if err != nil {
+		panic(err)
+	}
+
+	mqttURL := configuration.MqttUrl
+	topic := configuration.MqttTopic
 
 	messageHandler := func(client mqtt.Client, message mqtt.Message) {
 		payload := strings.TrimSpace(string(message.Payload()))

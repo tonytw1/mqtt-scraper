@@ -1,0 +1,4 @@
+{
+  "MqttUrl": "tcp://localhost:1883",
+  "MqttTopic": "",
+}
