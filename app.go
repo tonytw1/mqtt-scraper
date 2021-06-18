@@ -97,8 +97,8 @@ func setupMqttClient(mqttURL string, clientId string, topic string, handler mqtt
 	mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
 
 	var subscribeToTopic mqtt.OnConnectHandler = func(client mqtt.Client) {
-		log.Print("Connected")
-		log.Print("Subscribing")
+		log.Print("Connected to " + mqttURL)
+		log.Print("Subscribing to " + topic)
 		client.Subscribe(topic, 0, handler)
 	}
 	var logConnectionLost mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
