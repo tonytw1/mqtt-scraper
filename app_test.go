@@ -21,3 +21,11 @@ func TestCanParseFloatNumbers(t *testing.T) {
 	f, _ := value.Float64()
 	assert.Equal(t, 123.46, f)
 }
+
+func TestCanSmallFloats(t *testing.T) {
+	value, err := parseMaybeNumber("0.123")
+	require.Nil(t, err)
+
+	f, _ := value.Float64()
+	assert.Equal(t, 0.123, f)
+}
