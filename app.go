@@ -35,7 +35,7 @@ func main() {
 		payload := strings.TrimSpace(string(message.Payload()))
 		split := strings.Split(payload, ":")
 		if len(split) != 2 {
-			println("Rejected malformed message: '" + payload + "'")
+			log.Print("Rejected malformed message: '" + payload + "'")
 			return
 		}
 
@@ -44,7 +44,7 @@ func main() {
 		valueToParse := split[1]
 		value, err := parseMaybeNumber(valueToParse)
 		if err != nil {
-			println("Rejected unparsable value: '" + valueToParse + "'")
+			log.Print("Rejected unparsable value: '" + valueToParse + "'")
 		}
 
 		gauge := getOrRegisterGauge(name)
@@ -84,7 +84,7 @@ func getOrRegisterGauge(name string) prometheus.Gauge {
 			Name: name,
 			Help: "",
 		})
-		println("Registering new gauge: " + name)
+		log.Print("Registering new gauge: " + name)
 		minimalRegistry.MustRegister(gauge)
 		gauges[name] = gauge
 	}
@@ -114,7 +114,7 @@ func setupMqttClient(mqttURL string, clientId string, topic string, handler mqtt
 	opts.SetConnectionLostHandler(logConnectionLost)
 	opts.SetReconnectingHandler(logReconnecting)
 
-	println("Connecting to: ", mqttURL)
+	log.Print("Connecting to: ", mqttURL)
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
