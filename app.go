@@ -45,6 +45,7 @@ func main() {
 		value, err := parseMaybeNumber(valueToParse)
 		if err != nil {
 			log.Print("Rejected unparsable value: '" + valueToParse + "'")
+			return
 		}
 
 		gauge := getOrRegisterGauge(name)
