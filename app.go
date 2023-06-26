@@ -112,6 +112,12 @@ func getOrRegisterGauge(name string) prometheus.Gauge {
 		err := minimalRegistry.Register(gauge)
 		if err != nil {
 			log.Print("Could not register "+name, err)
+			if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+				log.Print("Got existing collector from error")
+				gauge = are.ExistingCollector.(prometheus.Gauge)
+			} else {
+				panic(err)
+			}
 		}
 		gauges[name] = gauge
 	}
