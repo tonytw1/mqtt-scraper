@@ -109,7 +109,10 @@ func getOrRegisterGauge(name string) prometheus.Gauge {
 		})
 
 		log.Print("Registering new gauge: " + name)
-		minimalRegistry.MustRegister(gauge)
+		err := minimalRegistry.Register(gauge)
+		if err != nil {
+			log.Print("Could not register "+name, err)
+		}
 		gauges[name] = gauge
 	}
 
