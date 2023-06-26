@@ -11,9 +11,11 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var gauges = make(map[string]prometheus.Gauge)
+var pings = make(map[string]time.Time)
 var minimalRegistry = prometheus.NewRegistry()
 
 type Configuration struct {
@@ -49,9 +51,18 @@ func main() {
 		}
 
 		gauge := getOrRegisterGauge(name)
-
+		pings[name] = time.Now()
 		f, _ := value.Float64()
 		gauge.Set(f)
+
+		// Periodic purge of stale values
+		// TODO needs to be in it's own concern and synced
+		for name, lastSeen := range pings {
+			isStale := lastSeen.Before(time.Now().Add(time.Duration(-1) * time.Minute))
+			if isStale {
+				log.Print(name + " has a stale value and should be purged")
+			}
+		}
 	}
 
 	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper", topic, messageHandler)
@@ -85,10 +96,12 @@ func getOrRegisterGauge(name string) prometheus.Gauge {
 			Name: name,
 			Help: "",
 		})
+
 		log.Print("Registering new gauge: " + name)
 		minimalRegistry.MustRegister(gauge)
 		gauges[name] = gauge
 	}
+
 	return gauge
 }
 
