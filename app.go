@@ -53,18 +53,20 @@ func main() {
 		gauge := getOrRegisterGauge(name)
 		pings[name] = time.Now()
 		f, _ := value.Float64()
+		log.Print(name+" set to ", f)
 		gauge.Set(f)
 
 		// Periodic purge of stale values
 		// TODO needs to be in it's own concern and synced
 		for name, lastSeen := range pings {
-			isStale := lastSeen.Before(time.Now().Add(time.Duration(-1) * time.Minute))
+			isStale := lastSeen.Before(time.Now().Add(time.Duration(-2) * time.Minute))
 			if isStale {
 				log.Print(name + " has a stale value and should be purged")
 
 				// Unregister this gauge
 				gauge, found := gauges[name]
 				if found {
+					log.Print(name + " unregister")
 					minimalRegistry.Unregister(gauge)
 					delete(gauges, name)
 					log.Print(name + " gauge has been purged")
