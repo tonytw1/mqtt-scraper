@@ -54,25 +54,15 @@ func main() {
 		f, _ := value.Float64()
 		log.Print(name+" set to ", f)
 		gauge.Set(f)
-
-		// Periodic purge of stale values
-		// TODO needs to be in it's own concern and synced
-		for name, lastSeen := range pings {
-			isStale := lastSeen.Before(time.Now().Add(time.Duration(-2) * time.Minute))
-			if isStale {
-				log.Print(name + " has a stale value and should be purged")
-				// Unregister this gauge
-				gauge, found := gauges[name]
-				if found {
-					log.Print(name + " unregister")
-					minimalRegistry.Unregister(gauge)
-					delete(gauges, name)
-					log.Print(name + " gauge has been purged")
-				}
-				delete(pings, name)
-			}
-		}
 	}
+
+	// Start a routine to periodically purge old metrics
+	go func() {
+		for {
+			purgeOldMetrics()
+			time.Sleep(10 * time.Second)
+		}
+	}()
 
 	mqttClient := setupMqttClient(mqttURL, "mqtt-scraper", topic, messageHandler)
 	defer mqttClient.Disconnect(250)
@@ -80,6 +70,26 @@ func main() {
 	handler := promhttp.HandlerFor(minimalRegistry, promhttp.HandlerOpts{})
 	http.Handle("/", handler)
 	http.ListenAndServe(":8080", nil)
+}
+
+func purgeOldMetrics() {
+	// Periodic purge of stale values
+	log.Print("Purging old metrics")
+	for name, lastSeen := range pings {
+		isStale := lastSeen.Before(time.Now().Add(time.Duration(-2) * time.Minute))
+		if isStale {
+			log.Print(name + " has a stale value and should be purged")
+			// Unregister this gauge
+			gauge, found := gauges[name]
+			if found {
+				log.Print(name + " unregister")
+				minimalRegistry.Unregister(gauge)
+				delete(gauges, name)
+				log.Print(name + " gauge has been purged")
+			}
+			delete(pings, name)
+		}
+	}
 }
 
 func normaliseMetricName(input string) string {
