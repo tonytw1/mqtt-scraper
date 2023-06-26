@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shopspring/decimal"
 	"github.com/tkanos/gonfig"
@@ -62,7 +61,6 @@ func main() {
 			isStale := lastSeen.Before(time.Now().Add(time.Duration(-2) * time.Minute))
 			if isStale {
 				log.Print(name + " has a stale value and should be purged")
-
 				// Unregister this gauge
 				gauge, found := gauges[name]
 				if found {
@@ -103,7 +101,7 @@ func parseMaybeNumber(valueToParse string) (*decimal.Decimal, error) {
 func getOrRegisterGauge(name string) prometheus.Gauge {
 	gauge, found := gauges[name]
 	if !found {
-		gauge = promauto.NewGauge(prometheus.GaugeOpts{
+		gauge = prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: name,
 			Help: "",
 		})
@@ -112,12 +110,7 @@ func getOrRegisterGauge(name string) prometheus.Gauge {
 		err := minimalRegistry.Register(gauge)
 		if err != nil {
 			log.Print("Could not register "+name, err)
-			if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
-				log.Print("Got existing collector from error")
-				gauge = are.ExistingCollector.(prometheus.Gauge)
-			} else {
-				panic(err)
-			}
+			panic(err)
 		}
 		gauges[name] = gauge
 	}
