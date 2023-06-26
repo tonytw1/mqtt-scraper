@@ -61,6 +61,15 @@ func main() {
 			isStale := lastSeen.Before(time.Now().Add(time.Duration(-1) * time.Minute))
 			if isStale {
 				log.Print(name + " has a stale value and should be purged")
+
+				// Unregister this gauge
+				gauge, found := gauges[name]
+				if found {
+					minimalRegistry.Unregister(gauge)
+					delete(gauges, name)
+					log.Print(name + " gauge has been purged")
+				}
+				delete(pings, name)
 			}
 		}
 	}
