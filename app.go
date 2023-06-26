@@ -10,12 +10,14 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 var gauges = make(map[string]prometheus.Gauge)
 var pings = make(map[string]time.Time)
 var minimalRegistry = prometheus.NewRegistry()
+var mu = sync.Mutex{}
 
 type Configuration struct {
 	MqttUrl   string
@@ -49,6 +51,8 @@ func main() {
 			return
 		}
 
+		mu.Lock()
+		defer mu.Unlock()
 		gauge := getOrRegisterGauge(name)
 		pings[name] = time.Now()
 		f, _ := value.Float64()
@@ -78,6 +82,7 @@ func purgeOldMetrics() {
 	for name, lastSeen := range pings {
 		isStale := lastSeen.Before(time.Now().Add(time.Duration(-2) * time.Minute))
 		if isStale {
+			mu.Lock()
 			log.Print(name + " has a stale value and should be purged")
 			// Unregister this gauge
 			gauge, found := gauges[name]
@@ -88,6 +93,7 @@ func purgeOldMetrics() {
 				log.Print(name + " gauge has been purged")
 			}
 			delete(pings, name)
+			mu.Unlock()
 		}
 	}
 }
