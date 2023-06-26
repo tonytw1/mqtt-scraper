@@ -50,13 +50,12 @@ func main() {
 			log.Print("Rejected unparsable value: '" + valueToParse + "'")
 			return
 		}
+		f, _ := value.Float64()
 
 		mu.Lock()
 		defer mu.Unlock()
 		gauge := getOrRegisterGauge(name)
 		pings[name] = time.Now()
-		f, _ := value.Float64()
-		log.Print(name+" set to ", f)
 		gauge.Set(f)
 	}
 
@@ -64,7 +63,7 @@ func main() {
 	go func() {
 		for {
 			purgeOldMetrics()
-			time.Sleep(10 * time.Second)
+			time.Sleep(1 * time.Minute)
 		}
 	}()
 
@@ -78,9 +77,8 @@ func main() {
 
 func purgeOldMetrics() {
 	// Periodic purge of stale values
-	log.Print("Purging old metrics")
 	for name, lastSeen := range pings {
-		isStale := lastSeen.Before(time.Now().Add(time.Duration(-2) * time.Minute))
+		isStale := lastSeen.Before(time.Now().Add(time.Duration(-5) * time.Minute))
 		if isStale {
 			mu.Lock()
 			log.Print(name + " has a stale value and should be purged")
