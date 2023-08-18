@@ -5,9 +5,9 @@ jobs:
   hellow:
     runs-on: ubuntu-latest
     steps:
-      - name: Hello wold
+      - name: Check out
         uses: actions/checkout@v3
+      - name: Hello world
         run: w
       - name: Build the Docker image
-        uses: actions/checkout@v3
         run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
